@@ -49,6 +49,12 @@ switch ($route) {
     case '/admin/admin':
         require_once __DIR__ . '/../app/views/adminDetail.php';
         break;
+    case '/admin/create':
+        require_once __DIR__ . '/../app/views/createStudent.php';
+        break;   
+    case '/admin/create/admin':
+        require_once __DIR__ . '/../app/views/admincreation.php';
+        break;   
         
     case '/admin/election':
         require_once __DIR__ . '/../app/views/electionDetail.php';

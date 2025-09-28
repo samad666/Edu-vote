@@ -1,7 +1,33 @@
-<?php include '../includes/header.php'; ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduVote - Admin Panel</title>
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<?php
+// Include configuration
+include 'includes/config.php';
 
-<div class="admin-layout">
-    <?php include '../includes/sidebar.php'; ?>
+// // Set page-specific variables
+setActivePage('elections');   // <-- FIXED, was 'dashboard'
+setPageTitle('Election Details');
+$additional_scripts = ['assets/js/charts.js'];
+
+// Include header
+include '../includes/header.php';
+
+// Include sidebar  
+include '../includes/sidebar.php';
+?>
+
+
+
+<div class="main-content">
     
     <main class="admin-main">
         <div class="detail-header">
@@ -109,55 +135,56 @@
             </div>
 
             <!-- Candidates List -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3>Candidates</h3>
-                    <button class="btn btn--primary btn--sm">Add Candidate</button>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Department</th>
-                                <th>Year</th>
-                                <th>Votes</th>
-                                <th>Percentage</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>C001</td>
-                                <td><a href="/admin/student">Michael Brown</a></td>
-                                <td>Computer Science</td>
-                                <td>Year 3</td>
-                                <td>245</td>
-                                <td>35.3%</td>
-                                <td>
-                                    <a href="/admin/student" class="btn btn--icon"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn--icon"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn--icon"><i class="fas fa-chart-bar"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>C002</td>
-                                <td><a href="/admin/student">Emma Wilson</a></td>
-                                <td>Business Admin</td>
-                                <td>Year 2</td>
-                                <td>198</td>
-                                <td>28.5%</td>
-                                <td>
-                                    <a href="/admin/student" class="btn btn--icon"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn--icon"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn--icon"><i class="fas fa-chart-bar"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<div class="content-card">
+    <div class="card-header">
+        <h3>Candidates</h3>
+        <button class="btn btn--primary btn--sm">+ Add Candidate</button>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Votes</th>
+                    <th>Percentage</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>C001</td>
+                    <td><a href="/admin/student">Michael Brown</a></td>
+                    <td>Computer Science</td>
+                    <td>Year 3</td>
+                    <td>245</td>
+                    <td>35.3%</td>
+                    <td class="actions">
+                        <a href="/admin/student" class="btn btn--icon view"><i class="fas fa-eye"></i></a>
+                        <button class="btn btn--icon edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn--icon stats"><i class="fas fa-chart-bar"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>C002</td>
+                    <td><a href="/admin/student">Emma Wilson</a></td>
+                    <td>Business Admin</td>
+                    <td>Year 2</td>
+                    <td>198</td>
+                    <td>28.5%</td>
+                    <td class="actions">
+                        <a href="/admin/student" class="btn btn--icon view"><i class="fas fa-eye"></i></a>
+                        <button class="btn btn--icon edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn--icon stats"><i class="fas fa-chart-bar"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 
             <!-- Department Participation -->
             <div class="content-card">
@@ -212,8 +239,10 @@
     </main>
 </div>
 
-<?php include '../includes/footer.php'; ?>
 
+<?php
+include 'includes/footer.php';
+?>
 <script>
     // Initialize voting trend chart
     if (typeof Chart !== 'undefined') {
@@ -239,3 +268,7 @@
         }
     }
 </script>
+
+<script src="../../assets/js/admin.js"></script>
+</body>
+</html>

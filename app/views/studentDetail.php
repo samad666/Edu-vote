@@ -1,3 +1,37 @@
+<?php
+// Load DB config
+require_once "../includes/config.php";
+
+// -------------------------------
+// 1. Get Student ID from URL
+// -------------------------------
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("❌ Invalid Student ID");
+}
+$student_id = (int) $_GET['id'];
+
+// -------------------------------
+// 2. Fetch Student Data
+// -------------------------------
+$sql = "SELECT * FROM students WHERE id = $student_id LIMIT 1";
+$result = mysqli_query($conn, $sql);
+
+if (!$result || mysqli_num_rows($result) === 0) {
+    die("❌ Student not found");
+}
+
+$student = mysqli_fetch_assoc($result);
+
+// -------------------------------
+// 3. Fetch Election History
+// -------------------------------
+$sql = "SELECT * FROM students WHERE student_id = $student_id LIMIT 1";
+
+$elections = mysqli_query(
+    $conn,
+$sql);
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,20 +53,17 @@
                 <span>EduVote</span>
             </div>
         </div>
-        
         <div class="header-center">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
                 <input type="text" placeholder="Search..." class="form-control">
             </div>
         </div>
-        
         <div class="header-right">
             <button class="notification-btn">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge">3</span>
             </button>
-            
             <div class="profile-dropdown">
                 <button class="profile-btn">
                     <div class="profile-avatar">
@@ -42,19 +73,10 @@
                     <i class="fas fa-chevron-down"></i>
                 </button>
                 <div class="dropdown-menu">
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-user-circle"></i>
-                        Profile
-                    </a>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-cog"></i>
-                        Settings
-                    </a>
+                    <a href="#" class="dropdown-item"><i class="fas fa-user-circle"></i> Profile</a>
+                    <a href="#" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout
-                    </a>
+                    <a href="/logout.php" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -64,48 +86,13 @@
     <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
             <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="dashboard">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="classes">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Class Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link active" data-page="students">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Students</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="admins">
-                        <i class="fas fa-users-cog"></i>
-                        <span>Class Admins</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="elections">
-                        <i class="fas fa-poll"></i>
-                        <span>Elections</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="winners">
-                        <i class="fas fa-trophy"></i>
-                        <span>Election Winners</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="analytics">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Analytics</span>
-                    </a>
-                </li>
+                <li><a href="/admin" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li><a href="/admin/classes.php" class="nav-link"><i class="fas fa-graduation-cap"></i><span>Class Management</span></a></li>
+                <li><a href="/admin/students.php" class="nav-link active"><i class="fas fa-user-graduate"></i><span>Students</span></a></li>
+                <li><a href="/admin/admins.php" class="nav-link"><i class="fas fa-users-cog"></i><span>Class Admins</span></a></li>
+                <li><a href="/admin/elections.php" class="nav-link"><i class="fas fa-poll"></i><span>Elections</span></a></li>
+                <li><a href="/admin/winners.php" class="nav-link"><i class="fas fa-trophy"></i><span>Election Winners</span></a></li>
+                <li><a href="/admin/analytics.php" class="nav-link"><i class="fas fa-chart-bar"></i><span>Analytics</span></a></li>
             </ul>
         </nav>
     </aside>
@@ -115,7 +102,7 @@
         <div class="breadcrumb">
             <a href="/admin" class="breadcrumb-item">Dashboard</a>
             <i class="fas fa-chevron-right"></i>
-            <a href="#" class="breadcrumb-item">Students</a>
+            <a href="/admin/students.php" class="breadcrumb-item">Students</a>
             <i class="fas fa-chevron-right"></i>
             <span class="breadcrumb-item active">Student Details</span>
         </div>
@@ -125,35 +112,20 @@
                 <div class="profile-cover"></div>
                 <div class="profile-info">
                     <div class="profile-avatar-large">
-                        <img src="https://ui-avatars.com/api/?name=John+Smith&background=4a90e2&color=fff" alt="John Smith">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($student['full_name']); ?>&background=4a90e2&color=fff" alt="<?php echo htmlspecialchars($student['full_name']); ?>">
                     </div>
                     <div class="profile-details">
-                        <h1>John Smith</h1>
-                        <p class="student-id">Student ID: ST001</p>
+                        <h1><?php echo htmlspecialchars($student['full_name']); ?></h1>
+                        <p class="student-id">Student ID: <?php echo htmlspecialchars($student['student_id']); ?></p>
                         <div class="profile-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-poll"></i>
-                                <span>12 Elections Participated</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-trophy"></i>
-                                <span>3 Positions Held</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-graduation-cap"></i>
-                                <span>Computer Science A</span>
-                            </div>
+                            <div class="stat-item"><i class="fas fa-graduation-cap"></i> <span><?php echo htmlspecialchars($student['class']); ?></span></div>
+                            <div class="stat-item"><i class="fas fa-envelope"></i> <span><?php echo htmlspecialchars($student['email']); ?></span></div>
+                            <div class="stat-item"><i class="fas fa-phone"></i> <span><?php echo htmlspecialchars($student['phone']); ?></span></div>
                         </div>
                     </div>
                     <div class="profile-actions">
-                        <button class="btn btn--primary">
-                            <i class="fas fa-edit"></i>
-                            Edit Profile
-                        </button>
-                        <button class="btn btn--outline">
-                            <i class="fas fa-envelope"></i>
-                            Send Message
-                        </button>
+                        <button class="btn btn--primary"><i class="fas fa-edit"></i> Edit Profile</button>
+                        <button class="btn btn--outline"><i class="fas fa-envelope"></i> Send Message</button>
                     </div>
                 </div>
             </div>
@@ -164,36 +136,15 @@
                     <div class="content-card">
                         <div class="card-header">
                             <h3>Personal Information</h3>
-                            <button class="btn btn--icon">
-                                <i class="fas fa-edit"></i>
-                            </button>
                         </div>
                         <div class="card__body">
                             <div class="info-grid">
-                                <div class="info-item">
-                                    <label>Full Name</label>
-                                    <p>John Smith</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Email</label>
-                                    <p>john.smith@example.com</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Phone</label>
-                                    <p>+1 (555) 123-4567</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Date of Birth</label>
-                                    <p>March 15, 2000</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Gender</label>
-                                    <p>Male</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Address</label>
-                                    <p>123 Campus Street, University Area</p>
-                                </div>
+                                <div class="info-item"><label>Full Name</label><p><?php echo htmlspecialchars($student['full_name']); ?></p></div>
+                                <div class="info-item"><label>Email</label><p><?php echo htmlspecialchars($student['email']); ?></p></div>
+                                <div class="info-item"><label>Phone</label><p><?php echo htmlspecialchars($student['phone']); ?></p></div>
+                                <div class="info-item"><label>Date of Birth</label><p><?php echo htmlspecialchars($student['dob']); ?></p></div>
+                                <div class="info-item"><label>Gender</label><p><?php echo htmlspecialchars($student['gender']); ?></p></div>
+                                <div class="info-item"><label>Address</label><p><?php echo htmlspecialchars($student['address']); ?></p></div>
                             </div>
                         </div>
                     </div>
@@ -202,32 +153,14 @@
                     <div class="content-card">
                         <div class="card-header">
                             <h3>Academic Information</h3>
-                            <button class="btn btn--icon">
-                                <i class="fas fa-edit"></i>
-                            </button>
                         </div>
                         <div class="card__body">
                             <div class="info-grid">
-                                <div class="info-item">
-                                    <label>Department</label>
-                                    <p>Computer Science</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Class</label>
-                                    <p>Computer Science A</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Admission Year</label>
-                                    <p>2023</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Current Semester</label>
-                                    <p>3rd Semester</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Academic Status</label>
-                                    <span class="status status--success">Active</span>
-                                </div>
+                                <div class="info-item"><label>Department</label><p><?php echo htmlspecialchars($student['department']); ?></p></div>
+                                <div class="info-item"><label>Class</label><p><?php echo htmlspecialchars($student['class']); ?></p></div>
+                                <div class="info-item"><label>Admission Year</label><p><?php echo htmlspecialchars($student['admission_year']); ?></p></div>
+                                <div class="info-item"><label>Current Semester</label><p><?php echo htmlspecialchars($student['semester']); ?></p></div>
+                                <div class="info-item"><label>Status</label><span class="status status--success"><?php echo htmlspecialchars($student['status']); ?></span></div>
                             </div>
                         </div>
                     </div>
@@ -237,7 +170,6 @@
                 <div class="content-card">
                     <div class="card-header">
                         <h3>Election History</h3>
-                        <button class="btn btn--outline btn--sm">View All</button>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -251,27 +183,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Student Council 2024</td>
-                                    <td>President</td>
-                                    <td>Mar 15, 2024</td>
-                                    <td><span class="status status--success">Won</span></td>
-                                    <td>458</td>
-                                </tr>
-                                <tr>
-                                    <td>Department Rep 2023</td>
-                                    <td>CS Representative</td>
-                                    <td>Nov 10, 2023</td>
-                                    <td><span class="status status--warning">Runner Up</span></td>
-                                    <td>342</td>
-                                </tr>
-                                <tr>
-                                    <td>Sports Committee 2023</td>
-                                    <td>Sports Secretary</td>
-                                    <td>Aug 05, 2023</td>
-                                    <td><span class="status status--error">Lost</span></td>
-                                    <td>234</td>
-                                </tr>
+                                <?php if ($elections && mysqli_num_rows($elections) > 0): ?>
+                                    <?php while ($row = mysqli_fetch_assoc($elections)): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($row['election_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['position']); ?></td>
+                                            <td><?php echo date("M d, Y", strtotime($row['election_date'])); ?></td>
+                                            <td>
+                                                <span class="status 
+                                                    <?php echo $row['result'] == 'Won' ? 'status--success' : ($row['result'] == 'Runner Up' ? 'status--warning' : 'status--error'); ?>">
+                                                    <?php echo htmlspecialchars($row['result']); ?>
+                                                </span>
+                                            </td>
+                                            <td><?php echo (int) $row['votes']; ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr><td colspan="5">No elections found</td></tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

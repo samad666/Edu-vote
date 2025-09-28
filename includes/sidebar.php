@@ -1,45 +1,49 @@
-<aside class="admin-sidebar">
-    <div class="sidebar-header">
-        <h2>Admin Panel</h2>
-    </div>
-    <nav class="sidebar-nav">
-        <ul>
-            <li>
-                <a href="/admin" class="nav-item">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="/admin/student" class="nav-item">
-                    <i class="fas fa-user-graduate"></i>
-                    <span>Students</span>
-                </a>
-            </li>
-            <li>
-                <a href="/admin/class" class="nav-item">
-                    <i class="fas fa-chalkboard"></i>
-                    <span>Classes</span>
-                </a>
-            </li>
-            <li>
-                <a href="/admin/election" class="nav-item">
-                    <i class="fas fa-vote-yea"></i>
-                    <span>Elections</span>
-                </a>
-            </li>
-            <li>
-                <a href="/admin/admin" class="nav-item">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Administrators</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="/logout" class="nav-item">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-        </a>
-    </div>
-</aside>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'dashboard') ? 'active' : ''; ?>" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'classes') ? 'active' : ''; ?>" data-page="classes">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Class Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'students') ? 'active' : ''; ?>" data-page="students">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>Students</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'admins') ? 'active' : ''; ?>" data-page="admins">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Class Admins</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'elections') ? 'active' : ''; ?>" data-page="elections">
+                        <i class="fas fa-poll"></i>
+                        <span>Elections</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'winners') ? 'active' : ''; ?>" data-page="winners">
+                        <i class="fas fa-trophy"></i>
+                        <span>Election Winners</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link <?php echo ($current_page == 'analytics') ? 'active' : ''; ?>" data-page="analytics">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>

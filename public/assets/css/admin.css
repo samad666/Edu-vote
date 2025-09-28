@@ -1138,6 +1138,7 @@ select.form-control {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  margin-top: 30px;
 }
 
 .card-header {
@@ -1302,8 +1303,11 @@ select.form-control {
 
 .profile-header {
     position: relative;
+    margin-top: 100px;
 }
-
+.meta-item {
+    margin-left: 30px;
+}
 .profile-cover {
     height: 200px;
     background: linear-gradient(135deg, var(--color-bg-1), var(--color-bg-2));
@@ -1773,3 +1777,93 @@ select.form-control {
     padding: var(--space-16);
   }
 }
+/* hjkfbkbhbhvhfbksdbhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvhjkfbkbhbhvhfbksdbvv */
+/* Card */
+.content-card {
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+/* Header */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+/* Table */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+
+
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid var(--color-card-border-inner);
+}
+
+
+
+
+.data-table a {
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.data-table a:hover {
+    text-decoration: underline;
+}
+
+/* Buttons */
+.btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+}
+
+.btn--primary {
+    background: #007bff;
+    color: #fff;
+}
+
+.btn--primary:hover {
+    background: #0056b3;
+}
+
+.btn--sm {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+}
+
+.btn--icon {
+    border: none;
+    cursor: pointer;
+    margin: 0 3px;
+    font-size: 1rem;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+/* Icon button hover colors */
+/* .btn--icon.view:hover { background: #e3f2fd; color: #1976d2; }
+.btn--icon.edit:hover { background: #fff3e0; color: #f57c00; }
+.btn--icon.stats:hover { background: #e8f5e9; color: #388e3c; } */

@@ -9,110 +9,24 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="logo">
-                <i class="fas fa-vote-yea"></i>
-                <span>EduVote</span>
-            </div>
-        </div>
-        
-        <div class="header-center">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search..." class="form-control">
-            </div>
-        </div>
-        
-        <div class="header-right">
-            <button class="notification-btn">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </button>
-            
-            <div class="profile-dropdown">
-                <button class="profile-btn">
-                    <div class="profile-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <span>Admin User</span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="dropdown-menu">
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-user-circle"></i>
-                        Profile
-                    </a>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-cog"></i>
-                        Settings
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
+<?php
+// Include configuration
+include_once '../includes/config.php';
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <nav class="sidebar-nav">
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link active" data-page="dashboard">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link" data-page="classes">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Class Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link" data-page="students">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Students</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link" data-page="admins">
-                        <i class="fas fa-users-cog"></i>
-                        <span>Class Admins</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link" data-page="elections">
-                        <i class="fas fa-poll"></i>
-                        <span>Elections</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link" data-page="winners">
-                        <i class="fas fa-trophy"></i>
-                        <span>Election Winners</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link" data-page="analytics">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Analytics</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
+// Set page-specific variables
+setActivePage('dashboard');
+setPageTitle('Admin Dashboard');
+$additional_scripts = ['assets/js/charts.js'];
+
+// Include header
+include '../includes/header.php';
+
+// Include sidebar  
+include '../includes/sidebar.php';
+?>
 
     <!-- Main Content -->
-    <main class="main-content">
+   <main class="main-content">
         <div class="breadcrumb">
             <span id="currentPage">Dashboard</span>
         </div>
@@ -390,7 +304,10 @@
             <div class="content-card">
                 <div class="card-header">
                     <h3>Student List</h3>
-                    <button class="btn btn--primary btn--sm">Add New Student</button>
+                    <a href="http://localhost:4000/admin/create" class="btn btn--primary btn--sm">
+    Add New Student
+</a>
+                    <!-- <button type='submit' class="btn btn--primary btn--sm" action='/admin/create'>Add New Student</button> -->
                 </div>
                 <div class="table-responsive">
                     <table class="data-table">
@@ -404,32 +321,44 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>ST001</td>
-                                <td><a href="/admin/student" class="student-link">John Smith</a></td>
-                                <td>Computer Science A</td>
-                                <td>john.smith@example.com</td>
-                                <td><span class="status status--success">Active</span></td>
-                                <td>
-                                    <a href="/admin/student" class="btn btn--icon"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn--icon"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn--icon"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>ST002</td>
-                                <td><a href="/admin/student" class="student-link">Sarah Johnson</a></td>
-                                <td>Business Management B</td>
-                                <td>sarah.j@example.com</td>
-                                <td><span class="status status--success">Active</span></td>
-                                <td>
-                                    <a href="/admin/student" class="btn btn--icon"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn--icon"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn--icon"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <?php
+require_once  __DIR__ . '/../models/students.php';
+
+// Pagination logic
+$perPage = 10;
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($page - 1) * $perPage;
+
+// Fetch data
+$students = getStudents($perPage, $offset);
+$totalStudents = getStudentCount();
+$totalPages = ceil($totalStudents / $perPage);
+?>
+
+<tbody>
+<?php if (!empty($students)) : ?>
+    <?php foreach ($students as $row): ?>
+        <tr>
+            <td><?= htmlspecialchars($row['student_id']) ?></td>
+            <td><a href="/admin/student?id=<?= $row['id'] ?>" class="student-link"><?= htmlspecialchars($row['full_name']) ?></a></td>
+            <td><?= htmlspecialchars($row['class']) ?></td>
+            <td><?= htmlspecialchars($row['email']) ?></td>
+            <td>
+                <span class="status <?= $row['status'] === 'Active' ? 'status--success' : 'status--danger' ?>">
+                    <?= htmlspecialchars($row['status']) ?>
+                </span>
+            </td>
+            <td>
+                <a href="/admin/student?id=<?= $row['id'] ?>" class="btn btn--icon"><i class="fas fa-eye"></i></a>
+                <button class="btn btn--icon"><i class="fas fa-edit"></i></button>
+                <button class="btn btn--icon"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+<?php else: ?>
+    <tr><td colspan="6">No students found</td></tr>
+<?php endif; ?>
+</tbody>
                     </table>
                 </div>
             </div>
@@ -595,6 +524,12 @@
         </div>
     </main>
 
-    <script src="assets/js/admin.js"></script>
+<?php
+// Include footer
+include '../includes/footer.php';
+?>
+<script src="assets/js/admin.js"></script>
 </body>
 </html>
+
+

@@ -61,57 +61,12 @@
     </header>
 
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <nav class="sidebar-nav">
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="dashboard">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link active" data-page="classes">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Class Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="students">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Students</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="admins">
-                        <i class="fas fa-users-cog"></i>
-                        <span>Class Admins</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="elections">
-                        <i class="fas fa-poll"></i>
-                        <span>Elections</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="winners">
-                        <i class="fas fa-trophy"></i>
-                        <span>Election Winners</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-page="analytics">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Analytics</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
+
 
     <!-- Main Content -->
     <main class="main-content">
+            <?php include '../includes/sidebar.php'; ?>
+
         <div class="breadcrumb">
             <a href="/admin" class="breadcrumb-item">Dashboard</a>
             <i class="fas fa-chevron-right"></i>

@@ -1,7 +1,33 @@
-<?php 
-$root = $_SERVER['DOCUMENT_ROOT'] . '/..';
-include $root . '/includes/header.php';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduVote - Admin Panel</title>
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<?php
+// Include configuration
+include 'includes/config.php';
+
+// // Set page-specific variables
+setActivePage('winners');   // <-- FIXED, was 'dashboard'
+setPageTitle('Winner Details');
+$additional_scripts = ['assets/js/charts.js'];
+
+// Include header
+include '../includes/header.php';
+
+// Include sidebar  
+include '../includes/sidebar.php';
 ?>
+
+
+
+<div class="main-content">
 
 <div class="admin-layout">
     <?php include $root . '/includes/sidebar.php'; ?>
@@ -208,3 +234,6 @@ include $root . '/includes/header.php';
 </div>
 
 <?php include $root . '/includes/footer.php'; ?>
+<script src="../../assets/js/admin.js"></script>
+</body>
+</html>

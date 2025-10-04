@@ -102,8 +102,8 @@
 require_once  '../includes/config.php';
 
 // // Set page-specific variables
-setActivePage('elections');   // <-- FIXED, was 'dashboard'
-setPageTitle('Election Details');
+setActivePage('students');
+setPageTitle('Create Student');
 $additional_scripts = ['assets/js/charts.js'];
 
 // Include header
@@ -112,13 +112,14 @@ include '../includes/header.php';
 // Include sidebar  
 include '../includes/sidebar.php';
 
-
+// Fetch classes for dropdown
+$classes_sql = "SELECT id, class_name FROM class ORDER BY class_name";
+$classes_result = mysqli_query($conn, $classes_sql);
 
 $message = "";
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  echo $_POST;
     $full_name      = mysqli_real_escape_string($conn, $_POST['fullName']);
     $email          = mysqli_real_escape_string($conn, $_POST['email']);
     $phone          = mysqli_real_escape_string($conn, $_POST['phone']);
@@ -126,13 +127,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $gender         = mysqli_real_escape_string($conn, $_POST['gender']);
     $address        = mysqli_real_escape_string($conn, $_POST['address']);
     $department     = mysqli_real_escape_string($conn, $_POST['department']);
-    $class          = mysqli_real_escape_string($conn, $_POST['class']);
+    $class_id       = mysqli_real_escape_string($conn, $_POST['class_id']);
     $admission_year = mysqli_real_escape_string($conn, $_POST['admissionYear']);
     $semester       = mysqli_real_escape_string($conn, $_POST['semester']);
     $status         = mysqli_real_escape_string($conn, $_POST['status']);
     $student_id     = mysqli_real_escape_string($conn, $_POST['studentId']);
-    $sql = "INSERT INTO students (full_name, email, phone, dob, gender, address, department, class, admission_year, semester,student_id, status) 
-            VALUES ('$full_name', '$email', '$phone', '$dob', '$gender', '$address', '$department', '$class', '$admission_year', '$semester', '$student_id','$status')";
+    
+    // Get class name from class_id
+    $class_name_sql = "SELECT class_name FROM class WHERE id = '$class_id'";
+    $class_name_result = mysqli_query($conn, $class_name_sql);
+    $class_name_row = mysqli_fetch_assoc($class_name_result);
+    $class = $class_name_row['class_name'];
+    
+    // Handle photo upload
+    $photo_path = null;
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] == 0) {
+        $upload_dir = '../uploads/students/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        $file_extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+        $photo_name = $student_id . '_' . time() . '.' . $file_extension;
+        $photo_path = $upload_dir . $photo_name;
+        
+        if (move_uploaded_file($_FILES['photo']['tmp_name'], $photo_path)) {
+            $photo_path = '/uploads/students/' . $photo_name;
+        } else {
+            $photo_path = null;
+        }
+    }
+    
+    $sql = "INSERT INTO students (full_name, email, phone, dob, gender, address, department, class, class_id, admission_year, semester, student_id, status, photo) 
+            VALUES ('$full_name', '$email', '$phone', '$dob', '$gender', '$address', '$department', '$class', '$class_id', '$admission_year', '$semester', '$student_id', '$status', '$photo_path')";
 
     if (mysqli_query($conn, $sql)) {
         $message = "✅ User created successfully!";
@@ -148,7 +174,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="main-content">
   <div class="form-container">
     <h2><i class="fas fa-user-plus"></i> Create New User</h2>
-     <form method="POST" action="">
+     <form method="POST" action="" enctype="multipart/form-data">
     <!-- Personal Information -->
     <div class="form-section">
       <h3>Personal Information</h3>
@@ -182,7 +208,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <option>Other</option>
           </select>
         </div>
-        <div class="form-group" style="grid-column: span 2;">
+        <div class="form-group">
+          <label for="photo">Photo</label>
+          <input type="file" name="photo" id="photo" accept="image/*">
+        </div>
+        <div class="form-group">
           <label for="address">Address</label>
           <textarea id="address" name="address" rows="2" placeholder="123 Campus Street, University Area"></textarea>
         </div>
@@ -198,8 +228,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <input type="text" name="department" id="department" placeholder="Computer Science">
         </div>
         <div class="form-group">
-          <label for="class">Class</label>
-          <input type="text" name="class" id="class" placeholder="Computer Science A">
+          <label for="class_id">Class</label>
+          <select name="class_id" id="class_id" required>
+            <option value="">Select Class</option>
+            <?php while ($class = mysqli_fetch_assoc($classes_result)): ?>
+              <option value="<?= htmlspecialchars($class['id']) ?>" data-class-name="<?= htmlspecialchars($class['class_name']) ?>">
+                <?= htmlspecialchars($class['class_name']) ?>
+              </option>
+            <?php endwhile; ?>
+          </select>
         </div>
         <div class="form-group">
           <label for="admissionYear">Admission Year</label>

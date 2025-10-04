@@ -51,9 +51,24 @@ switch ($route) {
         break;
     case '/admin/create':
         require_once __DIR__ . '/../app/views/createStudent.php';
+        break;
+    case '/admin/editStudent':
+        require_once __DIR__ . '/../app/views/editStudent.php';
         break;   
-    case '/admin/create/admin':
+    case '/admin/createAdmin':
         require_once __DIR__ . '/../app/views/admincreation.php';
+        break;
+    case '/admin/createElection':
+        require_once __DIR__ . '/../app/views/createElection.php';
+        break;
+    case '/admin/editElection':
+        require_once __DIR__ . '/../app/views/editElection.php';
+        break;    
+    case '/admin/createClass':
+        require_once __DIR__ . '/../app/views/createClass.php';
+        break;
+    case '/admin/classDetail':
+        require_once __DIR__ . '/../app/views/classDetail.php';
         break;   
         
     case '/admin/election':
@@ -67,6 +82,13 @@ switch ($route) {
     case '/admin':
         require_once __DIR__ . '/../app/views/adminPanel.php';
         break;
+    case '/vote':
+        require_once __DIR__ . '/../app/views/vote.php';
+        break;
+    case '/generate_token':
+        require_once __DIR__ . '/../generate_token.php';
+        break;
+
     case '/register':
         require_once __DIR__ . '/../app/controllers/AuthController.php';
         $controller = new AuthController();
@@ -82,10 +104,35 @@ switch ($route) {
         break;
         
     case '/login':
-        require_once __DIR__ . '/../app/controllers/AuthController.php';
-        $controller = new AuthController();
-        $data = $controller->login();
-        extract($data);
+        $error = '';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
+            
+            if ($username === 'superadmin' && $password === 'admin123') {
+                $_SESSION['user_type'] = 'super_admin';
+                $_SESSION['user_id'] = 1;
+                $_SESSION['username'] = 'Super Admin';
+                header('Location: /admin');
+                exit;
+            }
+            
+            $stmt = mysqli_prepare($conn, "SELECT * FROM admins WHERE email = ? AND password = ? AND status = 'Active'");
+            mysqli_stmt_bind_param($stmt, "ss", $username, $password);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            if ($admin = mysqli_fetch_assoc($result)) {
+                $_SESSION['user_type'] = 'class_admin';
+                $_SESSION['user_id'] = $admin['id'];
+                $_SESSION['admin_id'] = $admin['admin_id'];
+                $_SESSION['username'] = $admin['full_name'];
+                header('Location: /admin');
+                exit;
+            }
+            
+            $error = 'Invalid username or password';
+        }
         require_once __DIR__ . '/../app/views/login.php';
         break;
 
@@ -97,16 +144,14 @@ switch ($route) {
         require_once __DIR__ . '/../app/views/dashboard.php';
         break;
 
-    case '/logout':
-        require_once __DIR__ . '/../app/controllers/AuthController.php';
-        $controller = new AuthController();
-        $controller->logout();
+    case '/admin/class-dashboard':
+        require_once __DIR__ . '/../app/views/dashboard.php';
         break;
+        
     case '/logout':
-        require_once __DIR__ . '/../app/controllers/AuthController.php';
-        $controller = new AuthController();
-        $controller->logout();
-        break;    
+        session_destroy();
+        header('Location: /login');
+        exit;    
 
     default:
         header("Location: /login");

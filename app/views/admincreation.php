@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduVote - Create Admin</title>
-  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     .form-container {
@@ -13,14 +13,14 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      background: #fff;
+      /* background: #fff; */
     }
 
     h2 {
       margin-bottom: 20px;
       text-align: center;
       font-size: 1.6rem;
-      color: #333;
+      color: #958b8bff;
     }
 
     .form-section {
@@ -32,7 +32,7 @@
       margin-bottom: 15px;
       border-left: 4px solid #007bff;
       padding-left: 10px;
-      color: #444;
+      color: #bdb4b4ff;
     }
 
     .form-grid {
@@ -69,7 +69,7 @@
 
     .btn-submit {
       background: #007bff;
-      color: #fff;
+      color: #b6acacff;
       border: none;
       padding: 12px 20px;
       border-radius: 8px;
@@ -86,20 +86,62 @@
 </head>
 <body>
 <?php
-// Include configuration
-include 'includes/config.php';
+require_once  '../includes/config.php';
 
-// Page settings
-setActivePage('admins');  
-setPageTitle('Create Admin');
+// // Set page-specific variables
+setActivePage('elections');   // <-- FIXED, was 'dashboard'
+setPageTitle('Election Details');
+$additional_scripts = ['assets/js/charts.js'];
 
-// Include header & sidebar
+// Include header
 include '../includes/header.php';
+
+// Include sidebar  
 include '../includes/sidebar.php';
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // 1. Retrieve data
+    $full_name  = $_POST['fullName'];
+    $admin_id   = $_POST['adminId'];
+    $role       = $_POST['role'];
+    $department = $_POST['department'];
+    $join_date  = $_POST['joinDate'];
+    $status     = $_POST['status'];
+    $email      = $_POST['email'];
+
+    // 2. Prepare the SQL statement
+    $sql = "INSERT INTO admins 
+            (full_name, admin_id, role, department, join_date, status, email) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)";
+            
+    $stmt = mysqli_prepare($conn, $sql);
+
+    if ($stmt) {
+        // 3. Bind parameters (s=string, d=double, i=integer)
+        // All fields are strings except join_date which is a date string.
+        mysqli_stmt_bind_param($stmt, "sssssss", 
+            $full_name, $admin_id, $role, $department, $join_date, $status, $email
+        );
+        
+        // 4. Execute the statement
+        if (mysqli_stmt_execute($stmt)) {
+            $message = "✅ Admin created successfully! (Admin ID: " . $admin_id . ")";
+        } else {
+            $message = "❌ Error creating admin: " . mysqli_stmt_error($stmt);
+        }
+        
+        // 5. Close the statement
+        mysqli_stmt_close($stmt);
+    } else {
+        $message = "❌ Database error: Could not prepare statement.";
+    }
+}
+
 ?>
 
 <div class="main-content">
   <div class="form-container">
+         <form method="POST" action="">
+
     <h2><i class="fas fa-user-shield"></i> Create New Admin</h2>
 
     <!-- Admin Information -->
@@ -108,15 +150,15 @@ include '../includes/sidebar.php';
       <div class="form-grid">
         <div class="form-group">
           <label for="fullName">Full Name</label>
-          <input type="text" id="fullName" placeholder="Prof. Robert Wilson">
+          <input type="text" name="fullName" id="fullName" placeholder="Prof. Robert Wilson">
         </div>
         <div class="form-group">
           <label for="adminId">Admin ID</label>
-          <input type="text" id="adminId" placeholder="ADM-001">
+          <input type="text" name="adminId" id="adminId" placeholder="ADM-001">
         </div>
         <div class="form-group">
           <label for="role">Role</label>
-          <select id="role">
+          <select id="role" name="role">
             <option value="">Select</option>
             <option>Class Administrator</option>
             <option>Department Head</option>
@@ -125,15 +167,15 @@ include '../includes/sidebar.php';
         </div>
         <div class="form-group">
           <label for="department">Department</label>
-          <input type="text" id="department" placeholder="Computer Science Department">
+          <input type="text" id="department" name="department" placeholder="Computer Science Department">
         </div>
         <div class="form-group">
           <label for="joinDate">Join Date</label>
-          <input type="date" id="joinDate">
+          <input type="date" id="joinDate" name="joinDate">
         </div>
         <div class="form-group">
           <label for="status">Status</label>
-          <select id="status">
+          <select id="status" name="status">
             <option>Active</option>
             <option>Inactive</option>
             <option>Suspended</option>
@@ -141,7 +183,7 @@ include '../includes/sidebar.php';
         </div>
         <div class="form-group" style="grid-column: span 2;">
           <label for="email">Email</label>
-          <input type="email" id="email" placeholder="robert.wilson@example.com">
+          <input type="email" id="email" name="email" placeholder="robert.wilson@example.com">
         </div>
       </div>
     </div>
@@ -149,6 +191,7 @@ include '../includes/sidebar.php';
     <!-- Submit -->
     <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Create Admin</button>
   </div>
+  </form>
 </div>
 
 <script src="../../assets/js/admin.js"></script>

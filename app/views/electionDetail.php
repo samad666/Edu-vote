@@ -1,274 +1,255 @@
+<?php
+require_once '../includes/config.php';
+require __DIR__ . '/../../includes/mail.php';
+require_once __DIR__ . '/../models/candidates.php';
+
+// Get Election ID from URL
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("❌ Invalid Election ID");
+}
+$election_id = (int) $_GET['id'];
+
+// Handle candidate actions and election control
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['add_candidate'])) {
+        $student_id = $_POST['student_id'];
+        $election_type = $_POST['election_type'];
+        if (addCandidate($election_type, $student_id)) {
+            $success = "Candidate added successfully!";
+        } else {
+            $error = "Failed to add candidate.";
+        }
+    } elseif (isset($_POST['remove_candidate'])) {
+        $student_id = $_POST['student_id'];
+        $election_type = $_POST['election_type'];
+        if (removeCandidate($election_type, $student_id)) {
+            $success = "Candidate removed successfully!";
+        } else {
+            $error = "Failed to remove candidate.";
+        }
+    } elseif (isset($_POST['start_election'])) {
+        // Get election data first
+        $election_sql = "SELECT * FROM elections WHERE id = $election_id";
+        $election_result = mysqli_query($conn, $election_sql);
+        $election_data = mysqli_fetch_assoc($election_result);
+        
+        $update_sql = "UPDATE elections SET status='Active' WHERE id=$election_id";
+        if (mysqli_query($conn, $update_sql)) {
+            // Send emails to students
+            $mail_result = sendVotingEmails($election_id, $election_data['name'], $election_data['class_id']);
+            $success = "Election started successfully! Emails sent to {$mail_result['sent']} students.";
+            if ($mail_result['failed'] > 0) {
+                $success .= " ({$mail_result['failed']} emails failed to send)";
+            }
+        } else {
+            $error = "Failed to start election.";
+        }
+    } elseif (isset($_POST['stop_election'])) {
+        $update_sql = "UPDATE elections SET status='Completed' WHERE id=$election_id";
+        if (mysqli_query($conn, $update_sql)) {
+            $success = "Election stopped successfully!";
+            $election['status'] = 'Completed';
+        } else {
+            $error = "Failed to stop election.";
+        }
+    }
+}
+
+// Fetch Election Data
+$sql = "SELECT e.*, c.class_name FROM elections e LEFT JOIN class c ON e.class_id = c.id WHERE e.id = $election_id LIMIT 1";
+$result = mysqli_query($conn, $sql);
+
+if (!$result || mysqli_num_rows($result) === 0) {
+    die("❌ Election not found");
+}
+
+$election = mysqli_fetch_assoc($result);
+
+// Get candidates and available students
+$candidates = getCandidatesByElection($election['type']);
+$availableStudents = getAvailableStudents($election['type'], $election['class_id']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduVote - Admin Panel</title>
-    <link rel="stylesheet" href="../assets/css/admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Election Detail - EduVote</title>
+    <link rel="stylesheet" href="/assets/css/admin.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<?php
-// Include configuration
-include 'includes/config.php';
+    <?php include '../includes/header.php'; ?>
+    <?php include '../includes/sidebar.php'; ?>
 
-// // Set page-specific variables
-setActivePage('elections');   // <-- FIXED, was 'dashboard'
-setPageTitle('Election Details');
-$additional_scripts = ['assets/js/charts.js'];
-
-// Include header
-include '../includes/header.php';
-
-// Include sidebar  
-include '../includes/sidebar.php';
-?>
-
-
-
-<div class="main-content">
-    
-    <main class="admin-main">
-        <div class="detail-header">
-            <div class="breadcrumb">
-                <a href="/admin/dashboard">Dashboard</a>
-                <span class="separator">/</span>
-                <a href="/admin/elections">Elections</a>
-                <span class="separator">/</span>
-                <span class="current">Student Body President Election</span>
-            </div>
+    <main class="main-content">
+        <div class="breadcrumb">
+            <a href="/admin" class="breadcrumb-item">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="/admin#elections" class="breadcrumb-item">Elections</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="breadcrumb-item active"><?= htmlspecialchars($election['name']) ?></span>
         </div>
 
         <div class="profile-header">
             <div class="profile-info">
-                <h1>Student Body President Election</h1>
+                <h1><?= htmlspecialchars($election['name']) ?></h1>
                 <div class="profile-meta">
                     <span class="meta-item">
                         <i class="fas fa-calendar"></i>
-                        Started: Mar 15, 2024
+                        Started: <?= date('M j, Y', strtotime($election['start_date'])) ?>
                     </span>
                     <span class="meta-item">
                         <i class="fas fa-hourglass-end"></i>
-                        Ends: Mar 20, 2024
+                        Ends: <?= date('M j, Y', strtotime($election['end_date'])) ?>
                     </span>
-                    <span class="meta-item">
-                        <i class="fas fa-users"></i>
-                        892 Eligible Voters
+                    <span class="status <?= $election['status'] === 'Active' ? 'status--success' : 'status--warning' ?>">
+                        <?= htmlspecialchars($election['status']) ?>
                     </span>
-                    <span class="status status--warning">Ongoing</span>
                 </div>
             </div>
             <div class="profile-actions">
-                <button class="btn btn--primary">End Election</button>
+                <a href="/admin/editElection?id=<?= $election_id ?>" class="btn btn--primary">Edit Election</a>
+                <?php if ($election['status'] === 'Inactive'): ?>
+                    <form method="POST" style="display: inline;">
+                        <button type="submit" name="start_election" class="btn btn--success" onclick="return confirm('Start this election?')">Start Election</button>
+                    </form>
+                <?php elseif ($election['status'] === 'Active'): ?>
+                    <form method="POST" style="display: inline;">
+                        <button type="submit" name="stop_election" class="btn btn--danger" onclick="return confirm('Stop this election?')">Stop Election</button>
+                    </form>
+                <?php endif; ?>
                 <button class="btn btn--outline">Export Results</button>
             </div>
         </div>
 
+        <?php if (isset($success)): ?>
+            <div class="alert alert--success"><?= $success ?></div>
+        <?php endif; ?>
+        
+        <?php if (isset($error)): ?>
+            <div class="alert alert--error"><?= $error ?></div>
+        <?php endif; ?>
+
         <div class="profile-content">
             <div class="content-grid">
-                <!-- Election Information -->
                 <div class="content-card">
                     <div class="card-header">
                         <h3>Election Information</h3>
-                        <button class="btn btn--icon">
-                            <i class="fas fa-edit"></i>
-                        </button>
                     </div>
                     <div class="card__body">
                         <div class="info-grid">
                             <div class="info-item">
                                 <label>Election Type</label>
-                                <p>Student Body President</p>
+                                <p><?= htmlspecialchars($election['type']) ?></p>
                             </div>
                             <div class="info-item">
                                 <label>Scope</label>
-                                <p>College-wide</p>
+                                <p><?= htmlspecialchars($election['scope']) ?></p>
                             </div>
                             <div class="info-item">
-                                <label>Election ID</label>
-                                <p>EL-2024-001</p>
+                                <label>Class</label>
+                                <p><?= htmlspecialchars($election['class_name'] ?? 'All Classes') ?></p>
                             </div>
                             <div class="info-item">
-                                <label>Duration</label>
-                                <p>5 Days</p>
+                                <label>Profile</label>
+                                <p><?= htmlspecialchars($election['profile']) ?></p>
                             </div>
                             <div class="info-item">
                                 <label>Status</label>
-                                <span class="status status--warning">Ongoing</span>
+                                <span class="status <?= $election['status'] === 'Active' ? 'status--success' : 'status--warning' ?>">
+                                    <?= htmlspecialchars($election['status']) ?>
+                                </span>
                             </div>
                             <div class="info-item">
-                                <label>Created By</label>
-                                <p>Admin User</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Election Statistics -->
-                <div class="content-card">
-                    <div class="card-header">
-                        <h3>Election Statistics</h3>
-                        <button class="btn btn--outline btn--sm">Download Report</button>
-                    </div>
-                    <div class="card__body">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Total Voters</label>
-                                <p>892</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Votes Cast</label>
-                                <p>695</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Participation Rate</label>
-                                <p>78%</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Time Remaining</label>
-                                <p>2 days</p>
+                                <label>Winner</label>
+                                <p><?= $election['winner_student_id'] ? htmlspecialchars($election['winner_student_id']) : 'TBD' ?></p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Candidates List -->
-<div class="content-card">
-    <div class="card-header">
-        <h3>Candidates</h3>
-        <button class="btn btn--primary btn--sm">+ Add Candidate</button>
-    </div>
-    <div class="table-responsive">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Department</th>
-                    <th>Year</th>
-                    <th>Votes</th>
-                    <th>Percentage</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>C001</td>
-                    <td><a href="/admin/student">Michael Brown</a></td>
-                    <td>Computer Science</td>
-                    <td>Year 3</td>
-                    <td>245</td>
-                    <td>35.3%</td>
-                    <td class="actions">
-                        <a href="/admin/student" class="btn btn--icon view"><i class="fas fa-eye"></i></a>
-                        <button class="btn btn--icon edit"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn--icon stats"><i class="fas fa-chart-bar"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>C002</td>
-                    <td><a href="/admin/student">Emma Wilson</a></td>
-                    <td>Business Admin</td>
-                    <td>Year 2</td>
-                    <td>198</td>
-                    <td>28.5%</td>
-                    <td class="actions">
-                        <a href="/admin/student" class="btn btn--icon view"><i class="fas fa-eye"></i></a>
-                        <button class="btn btn--icon edit"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn--icon stats"><i class="fas fa-chart-bar"></i></button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-
-            <!-- Department Participation -->
+            <!-- Add Candidate Form -->
             <div class="content-card">
                 <div class="card-header">
-                    <h3>Department Participation</h3>
-                    <button class="btn btn--outline btn--sm">View Details</button>
+                    <h3>Add Candidate</h3>
+                </div>
+                <div class="card__body">
+                    <form method="POST" class="form">
+                        <input type="hidden" name="election_type" value="<?= htmlspecialchars($election['type']) ?>">
+                        <div class="form-group">
+                            <label for="student_id">Select Student</label>
+                            <select name="student_id" id="student_id" class="form-control" required>
+                                <option value="">Choose a student...</option>
+                                <?php foreach ($availableStudents as $student): ?>
+                                    <option value="<?= htmlspecialchars($student['student_id']) ?>">
+                                        <?= htmlspecialchars($student['full_name']) ?> (<?= htmlspecialchars($student['student_id']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="submit" name="add_candidate" class="btn btn--primary">Add Candidate</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Candidates List -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Candidates (<?= count($candidates) ?>)</h3>
                 </div>
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Department</th>
-                                <th>Total Students</th>
-                                <th>Votes Cast</th>
-                                <th>Participation</th>
-                                <th>Status</th>
+                                <th>Photo</th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Email</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Computer Science</td>
-                                <td>250</td>
-                                <td>213</td>
-                                <td>85%</td>
-                                <td><span class="status status--success">High</span></td>
-                            </tr>
-                            <tr>
-                                <td>Business Admin</td>
-                                <td>180</td>
-                                <td>130</td>
-                                <td>72%</td>
-                                <td><span class="status status--warning">Medium</span></td>
-                            </tr>
+                            <?php if (!empty($candidates)): ?>
+                                <?php foreach ($candidates as $candidate): ?>
+                                    <tr>
+                                        <td>
+                                            <?php if ($candidate['photo']): ?>
+                                                <img src="<?= htmlspecialchars($candidate['photo']) ?>" alt="Photo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                            <?php else: ?>
+                                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($candidate['student_id']) ?></td>
+                                        <td><?= htmlspecialchars($candidate['full_name']) ?></td>
+                                        <td><?= htmlspecialchars($candidate['class']) ?></td>
+                                        <td><?= htmlspecialchars($candidate['email']) ?></td>
+                                        <td>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="election_type" value="<?= htmlspecialchars($election['type']) ?>">
+                                                <input type="hidden" name="student_id" value="<?= htmlspecialchars($candidate['student_id']) ?>">
+                                                <button type="submit" name="remove_candidate" class="btn btn--icon" onclick="return confirm('Remove this candidate?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr><td colspan="6">No candidates added yet</td></tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Voting Trends Chart -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3>Voting Trends</h3>
-                    <button class="btn btn--outline btn--sm">Export Data</button>
-                </div>
-                <div class="card__body">
-                    <div class="chart-container" style="position: relative; height: 300px;">
-                        <canvas id="votingTrendChart"></canvas>
-                    </div>
-                </div>
-            </div>
         </div>
     </main>
-</div>
 
-
-<?php
-include 'includes/footer.php';
-?>
-<script>
-    // Initialize voting trend chart
-    if (typeof Chart !== 'undefined') {
-        const ctx = document.getElementById('votingTrendChart');
-        if (ctx) {
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
-                    datasets: [{
-                        label: 'Votes Cast',
-                        data: [150, 320, 450, 680, 892],
-                        borderColor: getComputedStyle(document.documentElement)
-                            .getPropertyValue('--color-primary').trim(),
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-    }
-</script>
-
-<script src="../../assets/js/admin.js"></script>
+    <?php include '../includes/footer.php'; ?>
+    <script src="/assets/js/admin.js"></script>
 </body>
 </html>

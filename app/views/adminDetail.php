@@ -1,17 +1,40 @@
+<?php
+// Load DB config
+require_once "../includes/config.php";
+
+// -------------------------------
+// 1. Get Admin ID from URL
+// -------------------------------
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    die("❌ Invalid Admin ID");
+}
+$admin_id = (int) $_GET['id'];
+
+// -------------------------------
+// 2. Fetch Admin Data
+// -------------------------------
+$sql = "SELECT * FROM admins WHERE id = $admin_id LIMIT 1";
+$result = mysqli_query($conn, $sql);
+
+if (!$result || mysqli_num_rows($result) === 0) {
+    die("❌ Admin not found");
+}
+
+$admin = mysqli_fetch_assoc($result);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduVote - Admin Panel</title>
+    <title>Admin Detail - EduVote</title>
     <link rel="stylesheet" href="../assets/css/admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<?php
+    <?php
 // Include configuration
-include 'includes/config.php';
+require_once  '../includes/config.php';
 
 // // Set page-specific variables
 setActivePage('winners');   // <-- FIXED, was 'dashboard'
@@ -24,195 +47,130 @@ include '../includes/header.php';
 // Include sidebar  
 include '../includes/sidebar.php';
 ?>
-
-
-
-<div class="main-content">
-<div class="admin-layout">
-    <?php include $root . '/includes/sidebar.php'; ?>
-    
-    <main class="admin-main">
-        <div class="detail-header">
-            <div class="breadcrumb">
-                <a href="/admin/dashboard">Dashboard</a>
-                <span class="separator">/</span>
-                <a href="/admin/administrators">Administrators</a>
-                <span class="separator">/</span>
-                <span class="current">Prof. Robert Wilson</span>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <i class="fas fa-vote-yea"></i>
+                <span>EduVote</span>
             </div>
         </div>
-
-        <div class="profile-header">
-            <div class="profile-info">
-                <h1>Prof. Robert Wilson</h1>
-                <div class="profile-meta">
-                    <span class="meta-item">
-                        <i class="fas fa-id-badge"></i>
-                        ADM-001
-                    </span>
-                    <span class="meta-item">
-                        <i class="fas fa-envelope"></i>
-                        robert.wilson@example.com
-                    </span>
-                    <span class="meta-item">
-                        <i class="fas fa-building"></i>
-                        Computer Science Department
-                    </span>
-                    <span class="status status--success">Active</span>
+        <div class="header-center">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search..." class="form-control">
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <div class="profile-dropdown">
+                <button class="profile-btn">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span>Admin User</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" class="dropdown-item"><i class="fas fa-user-circle"></i> Profile</a>
+                    <a href="#" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/logout.php" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
-            <div class="profile-actions">
-                <button class="btn btn--primary">Edit Profile</button>
-                <button class="btn btn--outline">Reset Password</button>
-            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav-menu">
+                <li><a href="/admin" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li><a href="/admin/classes.php" class="nav-link"><i class="fas fa-graduation-cap"></i><span>Class Management</span></a></li>
+                <li><a href="/admin/students.php" class="nav-link"><i class="fas fa-user-graduate"></i><span>Students</span></a></li>
+                <li><a href="/admin/admins.php" class="nav-link active"><i class="fas fa-users-cog"></i><span>Class Admins</span></a></li>
+                <li><a href="/admin/elections.php" class="nav-link"><i class="fas fa-poll"></i><span>Elections</span></a></li>
+                <li><a href="/admin/winners.php" class="nav-link"><i class="fas fa-trophy"></i><span>Election Winners</span></a></li>
+                <li><a href="/admin/analytics.php" class="nav-link"><i class="fas fa-chart-bar"></i><span>Analytics</span></a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="breadcrumb">
+            <a href="/admin" class="breadcrumb-item">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="/admin/admins.php" class="breadcrumb-item">Class Admins</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="breadcrumb-item active">Admin Details</span>
         </div>
 
-        <div class="profile-content">
-            <div class="content-grid">
-                <!-- Admin Information -->
-                <div class="content-card">
-                    <div class="card-header">
-                        <h3>Admin Information</h3>
-                        <button class="btn btn--icon">
-                            <i class="fas fa-edit"></i>
-                        </button>
+        <div class="student-profile">
+            <div class="profile-header">
+                <div class="profile-cover"></div>
+                <div class="profile-info">
+                    <div class="profile-avatar-large">
+                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($admin['full_name']); ?>&background=4a90e2&color=fff" alt="<?php echo htmlspecialchars($admin['full_name']); ?>">
                     </div>
-                    <div class="card__body">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Full Name</label>
-                                <p>Prof. Robert Wilson</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Role</label>
-                                <p>Class Administrator</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Department</label>
-                                <p>Computer Science</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Join Date</label>
-                                <p>Jan 01, 2024</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Status</label>
-                                <span class="status status--success">Active</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Email</label>
-                                <p>robert.wilson@example.com</p>
+                    <div class="profile-details">
+                        <h1><?php echo htmlspecialchars($admin['full_name']); ?></h1>
+                        <p class="student-id">Admin ID: <?php echo htmlspecialchars($admin['admin_id']); ?></p>
+                        <div class="profile-stats">
+                            <div class="stat-item"><i class="fas fa-briefcase"></i> <span><?php echo htmlspecialchars($admin['role']); ?></span></div>
+                            <div class="stat-item"><i class="fas fa-building"></i> <span><?php echo htmlspecialchars($admin['department']); ?></span></div>
+                            <div class="stat-item"><i class="fas fa-envelope"></i> <span><?php echo htmlspecialchars($admin['email']); ?></span></div>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="btn btn--primary"><i class="fas fa-edit"></i> Edit Profile</button>
+                        <button class="btn btn--outline"><i class="fas fa-envelope"></i> Send Message</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-content">
+                <div class="content-grid">
+                    <!-- Personal Information -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Personal Information</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="info-grid">
+                                <div class="info-item"><label>Full Name</label><p><?php echo htmlspecialchars($admin['full_name']); ?></p></div>
+                                <div class="info-item"><label>Email</label><p><?php echo htmlspecialchars($admin['email']); ?></p></div>
+                                <div class="info-item"><label>Admin ID</label><p><?php echo htmlspecialchars($admin['admin_id']); ?></p></div>
+                                <div class="info-item"><label>Join Date</label><p><?php echo htmlspecialchars($admin['join_date']); ?></p></div>
+                                <div class="info-item"><label>Status</label><span class="status status--success"><?php echo htmlspecialchars($admin['status']); ?></span></div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Admin Statistics -->
-                <div class="content-card">
-                    <div class="card-header">
-                        <h3>Activity Statistics</h3>
-                        <button class="btn btn--outline btn--sm">View Report</button>
-                    </div>
-                    <div class="card__body">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Classes Managed</label>
-                                <p>2</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Total Students</label>
-                                <p>65</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Elections Created</label>
-                                <p>8</p>
-                            </div>
-                            <div class="info-item">
-                                <label>Last Active</label>
-                                <p>2 hours ago</p>
+                    <!-- Professional Information -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Professional Information</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="info-grid">
+                                <div class="info-item"><label>Role</label><p><?php echo htmlspecialchars($admin['role']); ?></p></div>
+                                <div class="info-item"><label>Department</label><p><?php echo htmlspecialchars($admin['department']); ?></p></div>
+                                <div class="info-item"><label>Join Date</label><p><?php echo htmlspecialchars($admin['join_date']); ?></p></div>
+                                <div class="info-item"><label>Status</label><span class="status status--success"><?php echo htmlspecialchars($admin['status']); ?></span></div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Managed Classes -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3>Managed Classes</h3>
-                    <button class="btn btn--primary btn--sm">Add Class</button>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Class Code</th>
-                                <th>Class Name</th>
-                                <th>Students</th>
-                                <th>Active Elections</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>CSA-2024</td>
-                                <td><a href="/admin/class">Computer Science A</a></td>
-                                <td>35</td>
-                                <td>2</td>
-                                <td><span class="status status--success">Active</span></td>
-                                <td>
-                                    <a href="/admin/class" class="btn btn--icon"><i class="fas fa-eye"></i></a>
-                                    <button class="btn btn--icon"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn--icon"><i class="fas fa-chart-bar"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="content-card">
-                <div class="card-header">
-                    <h3>Recent Activity</h3>
-                    <button class="btn btn--outline btn--sm">View All</button>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Description</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Added Student</td>
-                                <td>Added John Smith to Computer Science A</td>
-                                <td>Sep 26, 2025</td>
-                                <td>10:30 AM</td>
-                                <td><span class="status status--success">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td>Created Election</td>
-                                <td>New Class Representative Election</td>
-                                <td>Sep 25, 2025</td>
-                                <td>2:45 PM</td>
-                                <td><span class="status status--success">Completed</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </main>
-</div>
-
-<?php include $root . '/includes/footer.php'; ?>
 
     <script src="/assets/js/admin.js"></script>
 </body>

@@ -10,12 +10,17 @@ $request_uri = strtok($request_uri, '?');
 
 // Routes configuration
 $routes = [
+    '/login' => 'views/login.php',
+    '/logout' => '../logout.php',
     '/admin' => 'views/adminPanel.php',
+    '/admin/class-dashboard' => 'views/adminPanel.php',
     '/admin/class' => 'views/classDetail.php',
     '/admin/admin' => 'views/adminDetail.php',
     '/admin/election' => 'views/electionDetail.php',
     '/admin/winner' => 'views/winnerDetail.php',
-    '/admin/student' => 'views/studentDetail.php'
+    '/admin/student' => 'views/studentDetail.php',
+    '/admin/createElection' => 'views/createElection.php',
+    '/vote' => 'views/vote.php'
 ];
 
 // Clean up the request URI

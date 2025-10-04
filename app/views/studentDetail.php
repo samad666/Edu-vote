@@ -23,13 +23,36 @@ if (!$result || mysqli_num_rows($result) === 0) {
 $student = mysqli_fetch_assoc($result);
 
 // -------------------------------
-// 3. Fetch Election History
+// 3. Fetch Election History with Vote Counts and Positions
 // -------------------------------
-$sql = "SELECT * FROM students WHERE student_id = $student_id LIMIT 1";
+$sql = "
+    SELECT 
+        e.name,
+        e.type as position,
+        e.end_date as election_date,
+        COALESCE(vote_counts.vote_count, 0) as votes,
+        CASE 
+            WHEN e.winner_student_id = '{$student['student_id']}' THEN 'Won'
+            WHEN vote_counts.position = 2 THEN 'Runner Up'
+            WHEN vote_counts.position IS NOT NULL THEN CONCAT('Position ', vote_counts.position)
+            ELSE 'Participated'
+        END as result
+    FROM elections e
+    INNER JOIN candidates c ON e.id = c.election_id
+    LEFT JOIN (
+        SELECT 
+            v.election_id,
+            v.vote_candidate_id,
+            COUNT(*) as vote_count,
+            RANK() OVER (PARTITION BY v.election_id ORDER BY COUNT(*) DESC) as position
+        FROM votes v
+        GROUP BY v.election_id, v.vote_candidate_id
+    ) vote_counts ON c.election_id = vote_counts.election_id AND c.student_id = vote_counts.vote_candidate_id
+    WHERE c.student_id = '{$student['student_id']}'
+    ORDER BY e.end_date DESC
+";
 
-$elections = mysqli_query(
-    $conn,
-$sql);
+$elections = mysqli_query($conn, $sql);
 
 ?>
 <!DOCTYPE html>
@@ -124,7 +147,7 @@ $sql);
                         </div>
                     </div>
                     <div class="profile-actions">
-                        <button class="btn btn--primary"><i class="fas fa-edit"></i> Edit Profile</button>
+                        <a href="/admin/editStudent?id=<?= $student_id ?>" class="btn btn--primary"><i class="fas fa-edit"></i> Edit Profile</a>
                         <button class="btn btn--outline"><i class="fas fa-envelope"></i> Send Message</button>
                     </div>
                 </div>
@@ -186,7 +209,7 @@ $sql);
                                 <?php if ($elections && mysqli_num_rows($elections) > 0): ?>
                                     <?php while ($row = mysqli_fetch_assoc($elections)): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($row['election_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['name']); ?></td>
                                             <td><?php echo htmlspecialchars($row['position']); ?></td>
                                             <td><?php echo date("M d, Y", strtotime($row['election_date'])); ?></td>
                                             <td>
